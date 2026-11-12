@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Reveal from "./Reveal";
-import { CatalogueButton } from "./CatalogueDownload";
+import { EnquiryButton } from "./EnquiryForm";
 import { CONDENSED_FONT, GROTESK_FONT } from "./fonts";
 import { cldImage } from "../lib/cloudinaryUrl";
 import { SALES_EMAIL } from "../data/contactData";
@@ -26,8 +26,8 @@ const CARDS = [0, 3, 2, 4, 1, 5, 0, 6, 2, 7, 1, 8].map((n) => RING[n]);
 const STEP = 360 / CARDS.length;
 
 const CONTACTS = [
-  // Opens the visitor's own mail app with the address filled in
-  { label: SALES_EMAIL, href: `mailto:${SALES_EMAIL}`, icon: "M3 6h18v12H3z M3 7l9 6 9-6" },
+  // Opens the enquiry form, which emails the details to sales
+  { label: SALES_EMAIL, enquiry: true, icon: "M3 6h18v12H3z M3 7l9 6 9-6" },
   { label: "Abu Dhabi, United Arab Emirates", icon: "M12 21s-7-6.5-7-12a7 7 0 0 1 14 0c0 5.5-7 12-7 12z M12 11.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z" },
 ];
 
@@ -62,12 +62,12 @@ export function Home() {
                 >
                   Explore Products
                 </Link>
-                <CatalogueButton
+                <EnquiryButton
                   style={{ fontFamily: CONDENSED_FONT }}
                   className="border-2 border-white/60 text-white font-semibold uppercase tracking-[0.12em] text-[11px] sm:text-sm px-5 sm:px-8 py-2.5 sm:py-3.5 rounded-lg hover:bg-white hover:text-[#0b1f4b] transition-colors whitespace-nowrap"
                 >
                   Get a Quote
-                </CatalogueButton>
+                </EnquiryButton>
               </div>
 
               <ul style={{ fontFamily: GROTESK_FONT }} className="mt-6 sm:mt-8 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2.5 text-[13px] sm:text-[15px] text-white/85 w-fit max-w-full mx-auto text-left">
@@ -82,7 +82,9 @@ export function Home() {
                   );
                   return (
                     <li key={c.label} className="min-w-0">
-                      {c.href ? (
+                      {c.enquiry ? (
+                        <EnquiryButton className="flex items-center gap-2.5 min-w-0 max-w-full hover:underline underline-offset-4">{body}</EnquiryButton>
+                      ) : c.href ? (
                         <a href={c.href} className="flex items-center gap-2.5 hover:underline underline-offset-4">{body}</a>
                       ) : (
                         <span className="flex items-center gap-2.5">{body}</span>
