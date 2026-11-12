@@ -12,7 +12,7 @@ const FIELDS = [
   { field: "name", label: "Full Name", placeholder: "Enter your full name", type: "text", autoComplete: "name", maxLength: 80 },
   { field: "companyName", label: "Company Name", placeholder: "Enter your company name", type: "text", autoComplete: "organization", maxLength: 120 },
   { field: "email", label: "Business Email", placeholder: "name@company.com", type: "email", autoComplete: "email", maxLength: 200 },
-  { field: "phone", label: "Phone / WhatsApp Number", placeholder: "+91 98765 43210", type: "tel", autoComplete: "tel", maxLength: 20 },
+  { field: "phone", label: "Phone / WhatsApp Number", placeholder: "Enter your mobile number", type: "tel", autoComplete: "tel", maxLength: 20 },
   { field: "country", label: "Country", placeholder: "Enter your country", type: "text", autoComplete: "country-name", maxLength: 80 },
 ];
 
