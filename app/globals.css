@@ -1,0 +1,92 @@
+@import "tailwindcss";
+
+/* ── Slim Custom Scrollbar ─────────────────────────────────────────── */
+
+html {
+  scrollbar-width: thin;
+  scrollbar-color: #9db0d6 #0b1f4b;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0b1f4b;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #9db0d6;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #ffffff;
+}
+
+::-webkit-scrollbar-button {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+@keyframes nav-slide-down {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-nav-slide-down {
+  animation: nav-slide-down 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes toast-in {
+  from {
+    transform: translateY(12px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Extra-thin scrollbar for the admin product grid.
+   scrollbar-color is inherited from html, and while it is set Chrome ignores the
+   ::-webkit-scrollbar rules (so the bar stayed wide with arrows). Resetting it here
+   lets the 3px webkit bar below apply; Firefox, which has no webkit bar, gets "thin". */
+.thin-scroll {
+  scrollbar-width: auto;
+  scrollbar-color: auto;
+}
+
+.thin-scroll::-webkit-scrollbar {
+  width: 3px;
+}
+
+@supports not selector(::-webkit-scrollbar) {
+  .thin-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: #9db0d6 transparent;
+  }
+}
+
+
+/* Home hero product ring: one slow turn */
+@keyframes sc-ring {
+  from {
+    transform: rotateY(0deg);
+  }
+
+  to {
+    transform: rotateY(-360deg);
+  }
+}
