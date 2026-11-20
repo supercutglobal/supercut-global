@@ -11,7 +11,7 @@ import { emailProblem } from "../../../lib/emailCheck";
 // Per-IP limit on form submissions (kept in MongoDB, survives restarts)
 const MAX_PER_HOUR = 10;
 
-function notificationHtml({ name, email, mobile }, when) {
+function notificationHtml({ name, companyName, email, phone, country }, when) {
   const row = (label, value) =>
     `<tr><td style="padding:6px 16px 6px 0;color:#555">${label}</td><td style="padding:6px 0;font-weight:600">${value}</td></tr>`;
   return `<div style="font-family:Arial,sans-serif;font-size:15px;color:#0b1526">
@@ -19,8 +19,10 @@ function notificationHtml({ name, email, mobile }, when) {
   <p style="margin:0 0 16px">Someone filled in the form and downloaded the Super Cut catalogue. Reply to this email to answer them directly.</p>
   <table style="border-collapse:collapse">
     ${row("Name", escapeHtml(name))}
+    ${row("Company", escapeHtml(companyName))}
     ${row("Email", escapeHtml(email))}
-    ${row("Mobile", escapeHtml(mobile))}
+    ${row("Phone / WhatsApp", escapeHtml(phone))}
+    ${row("Country", escapeHtml(country))}
     ${row("Time", escapeHtml(when))}
   </table>
 </div>`;
@@ -47,7 +49,8 @@ export const POST = withHttpLog(async function POST(request, _context, log) {
     if (fields.company) return NextResponse.json({ error: "Invalid request" }, { status: 400 });
     return NextResponse.json({ error: "Check the highlighted fields", fields }, { status: 400 });
   }
-  const { name, email, mobile } = parsed.data;
+  const { company: _honeypot, ...lead } = parsed.data;
+  const { name, email } = lead;
 
   // Fake or throwaway addresses are refused, so every lead is someone the team can reply to
   const problem = await emailProblem(email);
@@ -61,7 +64,7 @@ export const POST = withHttpLog(async function POST(request, _context, log) {
   let leadId = crypto.randomUUID();
   try {
     const db = await getDb();
-    const { insertedId } = await db.collection("catalogueLeads").insertOne({ name, email, mobile, ip, createdAt: now });
+    const { insertedId } = await db.collection("catalogueLeads").insertOne({ ...lead, ip, createdAt: now });
     leadId = insertedId.toString();
   } catch (err) {
     log.error({ err }, "could not save catalogue lead");
@@ -72,8 +75,8 @@ export const POST = withHttpLog(async function POST(request, _context, log) {
     const when = now.toLocaleString("en-GB", { timeZone: "Asia/Dubai", dateStyle: "medium", timeStyle: "short" }) + " (UAE)";
     await sendMail({
       to: (process.env.CATALOGUE_NOTIFY_TO || "").split(",").map((s) => s.trim()).filter(Boolean),
-      subject: `Catalogue downloaded by ${name}`,
-      html: notificationHtml({ name, email, mobile }, when),
+      subject: `Catalogue downloaded by ${name} (${lead.companyName})`,
+      html: notificationHtml(lead, when),
       replyTo: email,
     });
   } catch (err) {

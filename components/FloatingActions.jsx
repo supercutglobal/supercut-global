@@ -1,6 +1,6 @@
 "use client";
 
-import { CatalogueButton } from "./CatalogueDownload";
+import { CatalogueButton } from "./EnquiryForm";
 import { whatsappUrl, INSTAGRAM_URL, FACEBOOK_URL, LINKEDIN_URL } from "../data/contactData";
 
 const enter = (delay) => ({ animation: `sc-float-enter 0.7s cubic-bezier(0.16, 1, 0.3, 1) ${delay}ms both` });

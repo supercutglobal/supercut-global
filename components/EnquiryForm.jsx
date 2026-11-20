@@ -18,18 +18,41 @@ const FIELDS = [
 
 const EMPTY = { name: "", companyName: "", email: "", phone: "", country: "", message: "", company: "" };
 
-function validate(v) {
+// The quote form and the catalogue download share one form; only the copy, the endpoint and the message box differ
+const MODES = {
+  quote: {
+    title: "Request a quote",
+    intro: "Tell us what you need and our sales team will reply by email.",
+    endpoint: "/api/enquiry",
+    withMessage: true,
+    submit: "Send enquiry",
+    sending: "Sending…",
+    done: "Your enquiry has been sent to our sales team. We will get back to you shortly.",
+  },
+  catalogue: {
+    title: "Download our catalogue",
+    intro: "Fill in your details and the PDF will download straight away.",
+    endpoint: "/api/catalogue",
+    withMessage: false,
+    submit: "Download catalogue",
+    sending: "Please wait…",
+    done: "Your catalogue download has started. Our team may contact you about your requirements.",
+  },
+};
+
+function validate(v, withMessage) {
   const e = {};
   if (v.name.trim().length < 2) e.name = "Enter your full name";
   if (v.companyName.trim().length < 2) e.companyName = "Enter your company name";
   if (!/^\S+@\S+\.\S+$/.test(v.email.trim())) e.email = "Enter a valid email";
   if (!/^\+?[0-9][0-9\s()-]{6,19}$/.test(v.phone.trim())) e.phone = "Enter a valid phone number with country code";
   if (v.country.trim().length < 2) e.country = "Enter your country";
-  if (v.message.trim().length < 5) e.message = "Tell us what you need";
+  if (withMessage && v.message.trim().length < 5) e.message = "Tell us what you need";
   return e;
 }
 
-function EnquiryForm({ onClose }) {
+function EnquiryForm({ mode = "quote", onClose }) {
+  const copy = MODES[mode];
   // Unmounted on close, so the form always reopens empty
   const [values, setValues] = useState(EMPTY);
   const [errors, setErrors] = useState({});
@@ -54,13 +77,17 @@ function EnquiryForm({ onClose }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const next = validate(values);
+    const next = validate(values, copy.withMessage);
     setErrors(next);
     if (Object.keys(next).length) return;
 
     setStatus("sending");
     try {
-      await axios.post("/api/enquiry", values);
+      // undefined is dropped from the JSON, so the catalogue request carries no message field
+      const body = copy.withMessage ? values : { ...values, message: undefined };
+      const { data } = await axios.post(copy.endpoint, body);
+      // Served as an attachment, so the page stays put
+      if (data?.downloadUrl) window.location.href = data.downloadUrl;
       setStatus("done");
     } catch (err) {
       const data = err?.response?.data;
@@ -107,7 +134,7 @@ function EnquiryForm({ onClose }) {
             {closeButton}
             <div className="mx-auto w-12 h-12 rounded-full bg-[#2f9e5b] text-white text-2xl grid place-items-center">✓</div>
             <h2 id="enquiry-title" className="mt-4 text-[22px] font-bold text-[#0b1f4b]">Thank you!</h2>
-            <p className="mt-2 text-[15px] text-neutral-600 max-w-sm mx-auto">Your enquiry has been sent to our sales team. We will get back to you shortly.</p>
+            <p className="mt-2 text-[15px] text-neutral-600 max-w-sm mx-auto">{copy.done}</p>
             <button
               type="button"
               onClick={onClose}
@@ -122,12 +149,12 @@ function EnquiryForm({ onClose }) {
             <div className="relative shrink-0 px-5 pt-4 pb-3 sm:px-8 sm:pt-7 sm:pb-4 border-b border-neutral-200">
               <div aria-hidden="true" className="sm:hidden mx-auto -mt-1.5 mb-2.5 h-1 w-10 rounded-full bg-neutral-300" />
               {closeButton}
-              <h2 id="enquiry-title" className="text-[19px] sm:text-[24px] font-bold text-[#0b1f4b] pr-10 leading-tight">Request a quote</h2>
-              <p className="mt-1 text-[13px] sm:text-[14.5px] leading-snug text-neutral-600 pr-6">Tell us what you need and our sales team will reply by email.</p>
+              <h2 id="enquiry-title" className="text-[19px] sm:text-[24px] font-bold text-[#0b1f4b] pr-10 leading-tight">{copy.title}</h2>
+              <p className="mt-1 text-[13px] sm:text-[14.5px] leading-snug text-neutral-600 pr-6">{copy.intro}</p>
             </div>
 
             <div className="thin-scroll [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-neutral-300 [&::-webkit-scrollbar-thumb:hover]:bg-neutral-400 flex-1 min-h-0 overflow-y-auto overscroll-contain px-5 pt-4 pb-5 sm:px-8 sm:py-6">
-              <h3 className="text-[16px] sm:text-[18px] font-bold text-[#0b1526]">1. Contact Information</h3>
+              <h3 className="text-[16px] sm:text-[18px] font-bold text-[#0b1526]">{copy.withMessage ? "1. Contact Information" : "Contact Information"}</h3>
               <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3 sm:gap-y-3.5">
                 {FIELDS.map(({ field, label: text, ...rest }, i) => (
                   // An odd last field spans both columns on desktop
@@ -146,6 +173,8 @@ function EnquiryForm({ onClose }) {
                 ))}
               </div>
 
+              {copy.withMessage && (
+              <>
               <h3 className="mt-5 sm:mt-6 text-[16px] sm:text-[18px] font-bold text-[#0b1526]">2. Your Requirement</h3>
               <div className="mt-3">
                 {label("enquiry-message", "Message")}
@@ -161,6 +190,8 @@ function EnquiryForm({ onClose }) {
                 />
                 {error("message")}
               </div>
+              </>
+              )}
 
               {/* Honeypot for bots; hidden from people and screen readers */}
               <input type="text" tabIndex={-1} autoComplete="off" aria-hidden="true" value={values.company} onChange={set("company")} className="hidden" />
@@ -174,7 +205,7 @@ function EnquiryForm({ onClose }) {
                 disabled={status === "sending"}
                 className="w-full bg-[#0b1f4b] text-white font-semibold text-[15px] py-3 sm:py-3.5 rounded-full hover:bg-[#13306b] disabled:opacity-60 transition-colors cursor-pointer"
               >
-                {status === "sending" ? "Sending…" : "Send enquiry"}
+                {status === "sending" ? copy.sending : copy.submit}
               </button>
             </div>
           </form>
@@ -185,7 +216,16 @@ function EnquiryForm({ onClose }) {
 }
 
 /** A button (styled by the caller) that opens the quote / enquiry form; the details are emailed to sales */
-export function EnquiryButton({ children, className, onClick, ...props }) {
+export function EnquiryButton(props) {
+  return <FormButton mode="quote" {...props} />;
+}
+
+/** A button (styled by the caller) that asks for the same contact details before the catalogue PDF downloads */
+export function CatalogueButton(props) {
+  return <FormButton mode="catalogue" {...props} />;
+}
+
+function FormButton({ mode, children, className, onClick, ...props }) {
   const [open, setOpen] = useState(false);
   return (
     <>
@@ -201,7 +241,7 @@ export function EnquiryButton({ children, className, onClick, ...props }) {
         {children}
       </button>
       {/* Portalled to <body>: the buttons sit inside animated (transformed) containers that would trap a fixed overlay */}
-      {open && createPortal(<EnquiryForm onClose={() => setOpen(false)} />, document.body)}
+      {open && createPortal(<EnquiryForm mode={mode} onClose={() => setOpen(false)} />, document.body)}
     </>
   );
 }

@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { CONDENSED_FONT, GROTESK_FONT } from "./fonts";
-import { CatalogueButton } from "./CatalogueDownload";
+import { CatalogueButton } from "./EnquiryForm";
 import { whatsappUrl } from "../data/contactData";
 
 export default function ProductModal({ item, onClose }) {
